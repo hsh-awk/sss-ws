@@ -1,23 +1,32 @@
 #!/bin/sh
 set -e
 
-# Проверяем что обязательные переменные заданы
+# Обязательные переменные
 : "${BACKEND_HOST:?Переменная BACKEND_HOST не задана}"
 : "${BACKEND_PORT:?Переменная BACKEND_PORT не задана}"
-: "${LISTEN_PORT:=8443}"
+
+# Опциональные — с дефолтами
+LISTEN_PORT="${LISTEN_PORT:-8443}"
+WS_PATH="${WS_PATH:-/ws}"
+GRPC_PATH="${GRPC_PATH:-/grpc}"
+XHTTP_PATH="${XHTTP_PATH:-/xhttp}"
+ORIGIN_URL="${ORIGIN_URL:-https://www.google.com}"
+
+export LISTEN_PORT WS_PATH GRPC_PATH XHTTP_PATH ORIGIN_URL
 
 echo "Starting nginx:"
 echo "  LISTEN_PORT  = $LISTEN_PORT"
 echo "  BACKEND_HOST = $BACKEND_HOST"
 echo "  BACKEND_PORT = $BACKEND_PORT"
+echo "  WS_PATH      = $WS_PATH"
+echo "  GRPC_PATH    = $GRPC_PATH"
+echo "  XHTTP_PATH   = $XHTTP_PATH"
+echo "  ORIGIN_URL   = $ORIGIN_URL"
 
-# envsubst подставляет переменные в шаблон и пишет финальный nginx.conf
-envsubst '${BACKEND_HOST} ${BACKEND_PORT} ${LISTEN_PORT}' \
+envsubst '${BACKEND_HOST} ${BACKEND_PORT} ${LISTEN_PORT} ${WS_PATH} ${GRPC_PATH} ${XHTTP_PATH} ${ORIGIN_URL}' \
     < /etc/nginx/nginx.conf.template \
     > /etc/nginx/nginx.conf
 
-# Проверяем конфиг
 nginx -t
 
-# Запускаем nginx
 exec nginx -g 'daemon off;'
